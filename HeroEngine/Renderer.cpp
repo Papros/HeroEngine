@@ -39,6 +39,8 @@ void drawFast(const IndependendFace& face, sf::RenderTarget& image) {
 
 void ClipAgainsPlane(const Vector3d& plane_p, Vector3d plane_n, const IndependendFace& face, std::vector<IndependendFace>& resoult) {
 	
+
+
 	Vector3d normalN = Vector3d::Normalize(plane_n);
 
 	Vector3d insidePoints[3];  int ninsideP = 0;
@@ -227,10 +229,10 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 				nNew--;
 				
 				switch (i) {
-				case 0: clipByEdges.push_back(test); break;//ClipAgainsPlane(Vector3d(0.0f, 0.0f, 0.0f), Vector3d(0.0f, 1.0f, 0.0f), test, clipByEdges); break;
-				case 1: clipByEdges.push_back(test); break;//ClipAgainsPlane(Vector3d(0.0f, (float)img.getSize().y*0.5f -1, 0.0f), Vector3d(0.0f, -1.0f, 0.0f), test, clipByEdges); break;
-				case 2: clipByEdges.push_back(test); break;//ClipAgainsPlane(Vector3d(0.0f, 0.0f, 0.0f), Vector3d(1.0f, 0.0f, 0.0f), test, clipByEdges); break;
-				case 3: clipByEdges.push_back(test); break;//ClipAgainsPlane(Vector3d((float)img.getSize().x*0.25f - 1.0f, 0.0f, 0.0f), Vector3d(-1.0f, 0.0f, 0.0f), test, clipByEdges); break;
+				case 0: ClipAgainsPlane(Vector3d(0.0f, -(float)img.getSize().y - 1, 0.0f), Vector3d(0.0f, 1.0f, 0.0f), test, clipByEdges); break;
+				case 1: ClipAgainsPlane(Vector3d(0.0f, 1.0f, 0.0f), Vector3d(0.0f, -1.0f, 0.0f), test, clipByEdges); break;
+				case 2: ClipAgainsPlane(Vector3d(-(float)img.getSize().x - 1, 0.0f, 0.0f), Vector3d(1.0f, 0.0f, 0.0f), test, clipByEdges); break;
+				case 3: ClipAgainsPlane(Vector3d(1.0f, 0.0f, 0.0f), Vector3d(-1.0f, 0.0f, 0.0f), test, clipByEdges); break;
 				}
 
 				for (IndependendFace face : clipByEdges) {

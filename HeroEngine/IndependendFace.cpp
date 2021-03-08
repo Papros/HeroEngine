@@ -19,7 +19,7 @@ IndependendFace::IndependendFace(Vector3d a, Vector3d b, Vector3d c)
 	this->C = c;
 }
 
-float IndependendFace::AverageZ()
+float IndependendFace::AverageZ()  const
 {
 	return (A.z + B.z + C.z) / 3;
 }

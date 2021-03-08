@@ -1,6 +1,6 @@
 #include "Mesh.h"
 
-std::string Mesh::GetName()
+std::string Mesh::GetName()  const
 {
 	return this->Name;
 }

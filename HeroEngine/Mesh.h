@@ -16,7 +16,7 @@ public:
 	Vector3d Position;
 	Vector3d Rotation;
 
-	std::string GetName();
+	std::string GetName() const;
 	bool SetName(std::string name);
 	bool AddVertices(Vector3d vector);
 	bool AddFace(int a, int b, int c);

@@ -7,7 +7,7 @@ class IndependendFace
 public:
 	Vector3d A, B, C;
 
-	float AverageZ();
+	float AverageZ() const;
 
 	IndependendFace();
 	IndependendFace(const IndependendFace& other);
