@@ -5,7 +5,7 @@ Camera::Camera()
 	this->position = Vector3d(0.0f, 0.0f, 10.0f);
 	this->lookDir = Vector3d(0.0f, 0.0f, -1.0f);
 	this->upDirection = Vector3d(0.0f, 1.0f, 0.0f);
-	angle = 0.5f; Yaw = 0.0f; Theta = 0.0f; Far = 1000.0f; Near=0.01f;
+	angle = 0.5f; Yaw = 0.0f; Theta = 0.0f; Far = 1000.0f; Near=0.1f;
 }
 
 Camera::Camera(const Camera& other)

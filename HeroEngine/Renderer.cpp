@@ -50,25 +50,14 @@ void ClipAgainsPlane(const Vector3d& plane_p, Vector3d plane_n, const Independen
 		return normalN.x * vector.x + normalN.y * vector.y + normalN.z * vector.z - normalN.DotProduct(plane_p);
 	};
 
-	float d0 = dist(face.A);
-	float d1 = dist(face.B);
-	float d2 = dist(face.C);
-
-	if (d0 >= 0.0f) { insidePoints[ninsideP++] = face.A; }
+	if (dist(face.A) >= 0.0f) { insidePoints[ninsideP++] = face.A; }
 	else { outsidePoints[noutsideP++] = face.A; }
 
-	if (d1 >= 0.0f) { insidePoints[ninsideP++] = face.B; }
+	if (dist(face.B) >= 0.0f) { insidePoints[ninsideP++] = face.B; }
 	else { outsidePoints[noutsideP++] = face.B; }
 
-	if (d2 >= 0.0f) { insidePoints[ninsideP++] = face.C; }
+	if (dist(face.C) >= 0.0f) { insidePoints[ninsideP++] = face.C; }
 	else { outsidePoints[noutsideP++] = face.C; }
-
-	if (ninsideP < 3) {
-		std::cout << "inside: "<<ninsideP << std::endl;
-	}
-	else {
-		std::cout << "{ " << d0 << " , " << d1 << " , " << d2 << " }" << std::endl;
-	}
 
 	if (ninsideP == 0) {
 		return;
@@ -105,10 +94,15 @@ void ClipAgainsPlane(const Vector3d& plane_p, Vector3d plane_n, const Independen
 	}
 }
 
-void EasyRender(const Scene& scene, sf::RenderTarget& img) {
+void Renderer::Render(const Scene &scene, sf::RenderTarget& img, bool debug)
+{
+
+	if (debug) {
+		std::cout << "=========== DEBUG ===========" << std::endl;
+	}
 
 	img.clear(sf::Color::Black);
-	
+
 	TransformMatrix projectionMatrix = TransformMatrix();
 	projectionMatrix.MakeProjection(scene.Cam.angle, ((float)img.getSize().y / (float)img.getSize().x), scene.Cam.Near, scene.Cam.Far);
 	float scale = 0.5f;
@@ -117,9 +111,14 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 
 	std::vector<IndependendFace> drawBuffor = std::vector<IndependendFace>();
 	std::vector<IndependendFace> clipped = std::vector<IndependendFace>();
-	
+
 	for (Mesh mesh : scene.Objects) {
-		
+
+		if (debug) {
+			std::cout << mesh.Position.ToString("Position") << std::endl;
+			std::cout << mesh.Rotation.ToString("Rotation") << std::endl;
+		}
+
 		TransformMatrix matRotZ = TransformMatrix(), matRotX = TransformMatrix(), matRotY = TransformMatrix();
 		matRotZ.MakeRotationZ(mesh.Rotation.z);
 		matRotX.MakeRotationX(mesh.Rotation.x);
@@ -141,7 +140,7 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 		cameraMatrix.PointAt(scene.Cam.position, Vector3d::Add(scene.Cam.position, lookDirection), scene.Cam.upDirection);
 
 		cameraMatrix.QuickInverse(cameraMatrix);
-		
+
 		for (Face face : mesh.Faces) {
 
 			Vector3d triFace[] = { *face.A,*face.B,*face.C };
@@ -156,31 +155,42 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 			Vector3d normal = *line1.CrossProduct(line2)->Normalize();
 			Vector3d cameraRay = Vector3d::Sub(triFace[1], scene.Cam.position);
 
-			if (normal.DotProduct(cameraRay) <= 0.0f ) {
+			if (normal.DotProduct(cameraRay) <= 0.0f) {
+
+				if (debug) {
+					std::cout << face.A->ToString("A") << std::endl;
+					std::cout << face.B->ToString("B") << std::endl;
+					std::cout << face.C->ToString("C") << std::endl;
+					std::cout << "worldMatrix" << std::endl;
+					std::cout << triFace[0].ToString("TriFaceA") << std::endl;
+					std::cout << triFace[1].ToString("TriFaceB") << std::endl;
+					std::cout << triFace[2].ToString("TriFaceC") << std::endl;
+				}
 
 				triFace[0] = cameraMatrix.Multiply(triFace[0]);
 				triFace[1] = cameraMatrix.Multiply(triFace[1]);
 				triFace[2] = cameraMatrix.Multiply(triFace[2]);
 
+				if (debug) {
+					std::cout << "cameraMatrix" << std::endl;
+					std::cout << triFace[0].ToString("TriFaceA") << std::endl;
+					std::cout << triFace[1].ToString("TriFaceB") << std::endl;
+					std::cout << triFace[2].ToString("TriFaceC") << std::endl;
+				}
+
 				clipped.clear();
-				//ClipAgainsPlane(Vector3d(0, 0, scene.Cam.Near), Vector3d(0, 0, 1), IndependendFace(triFace[0], triFace[1], triFace[2]), clipped);
+				ClipAgainsPlane(Vector3d(0, 0, scene.Cam.Near), Vector3d(0, 0, 1), IndependendFace(triFace[0], triFace[1], triFace[2]), clipped);
 				clipped.push_back(IndependendFace(triFace[0], triFace[1], triFace[2]));
+
 				for (IndependendFace clippedFace : clipped) {
 					clippedFace.A = projectionMatrix.Multiply(triFace[0]);
 					clippedFace.B = projectionMatrix.Multiply(triFace[1]);
 					clippedFace.C = projectionMatrix.Multiply(triFace[2]);
 
-					/*
 					clippedFace.A.Divide(clippedFace.A.w);
 					clippedFace.B.Divide(clippedFace.B.w);
 					clippedFace.C.Divide(clippedFace.C.w);
 					
-
-					clippedFace.A.Transform(1, 1, 0);
-					clippedFace.B.Transform(1, 1, 0);
-					clippedFace.C.Transform(1, 1, 0);
-					*/
-
 					clippedFace.A.x *= width;
 					clippedFace.A.y *= height;
 
@@ -190,7 +200,7 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 					clippedFace.C.x *= width;
 					clippedFace.C.y *= height;
 
-					if ( clippedFace.AverageZ() > scene.Cam.Near) {
+					if (clippedFace.AverageZ() > scene.Cam.Near) {
 						drawBuffor.push_back(clippedFace);
 					}
 				} // Foreach clippedFace
@@ -200,9 +210,9 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 		} // Foreach Face
 
 	} // Foreach mesh
-	
+
 	std::sort(std::begin(drawBuffor), std::end(drawBuffor), [](IndependendFace faceA, IndependendFace faceB) {
-			return faceA.AverageZ() < faceB.AverageZ();
+		return faceA.AverageZ() < faceB.AverageZ();
 		}
 	); // Sort
 
@@ -210,24 +220,24 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 	for (IndependendFace toDraw : drawBuffor) {
 
 		//drawTriangleFast(toDraw, img); continue;
-		
+
 		std::vector<IndependendFace> clipByEdges = std::vector<IndependendFace>();
 		std::list<IndependendFace> toClip = std::list<IndependendFace>();
-		
+
 		toClip.push_back(toDraw);
-		int nNew =  1;
-		
+		int nNew = 1;
+
 		for (int i = 0; i < 4; i++) {
-			
+
 			clipByEdges.clear();
 
 			while (nNew > 0) {
-				
+
 				IndependendFace test = toClip.front();
 				toClip.pop_front();
-				
+
 				nNew--;
-				
+
 				switch (i) {
 				case 0: ClipAgainsPlane(Vector3d(0.0f, -(float)img.getSize().y - 1, 0.0f), Vector3d(0.0f, 1.0f, 0.0f), test, clipByEdges); break;
 				case 1: ClipAgainsPlane(Vector3d(0.0f, 1.0f, 0.0f), Vector3d(0.0f, -1.0f, 0.0f), test, clipByEdges); break;
@@ -237,8 +247,8 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 
 				for (IndependendFace face : clipByEdges) {
 					toClip.push_back(face);
-				} 
-				
+				}
+
 			} //while nNew > 0
 
 			nNew = toClip.size();
@@ -247,132 +257,8 @@ void EasyRender(const Scene& scene, sf::RenderTarget& img) {
 		for (IndependendFace face : toClip) {
 			drawTriangleFast(face, img);
 		} // Foreach face
-		
+
 	} //Foreach toDraw
-	
-}
-
-void Renderer::Render(const Scene &scene, sf::RenderTarget& img)
-{
-	EasyRender(scene, img); 
-	return;
-	
-	img.clear(sf::Color::Black);
-	TransformMatrix projectionMatrix = TransformMatrix();
-	projectionMatrix.MakeProjection(scene.Cam.angle / 2.0f, ((float)img.getSize().y / (float)img.getSize().x), scene.Cam.Near, scene.Cam.Far);
-	float scale = 0.5f;
-	float width = img.getSize().x * scale;
-	float height = img.getSize().y * scale;
-	std::vector<IndependendFace> drawBuffor = std::vector<IndependendFace>();
-	std::vector<IndependendFace> clipped = std::vector<IndependendFace>();
-
-	for (Mesh mesh : scene.Objects) {
-
-		TransformMatrix matRotZ = TransformMatrix(), matRotX = TransformMatrix(), matRotY = TransformMatrix();
-		matRotZ.MakeRotationZ(mesh.Rotation.z);
-		matRotX.MakeRotationX(mesh.Rotation.x);
-		matRotY.MakeRotationY(mesh.Rotation.y);
-
-		TransformMatrix transformMatrix = TransformMatrix();
-		transformMatrix.MakeTranslation(mesh.Position.x, mesh.Position.y, mesh.Position.z);
-
-		TransformMatrix worldMatrix = TransformMatrix(matRotZ);
-		worldMatrix.Multiply(matRotX);
-		worldMatrix.Multiply(matRotY);
-		worldMatrix.Multiply(transformMatrix);
-
-		TransformMatrix cameraRotationMatrix = TransformMatrix();
-		cameraRotationMatrix.MakeRotationY(scene.Cam.Yaw);
-		Vector3d lookDirection = cameraRotationMatrix.Multiply(scene.Cam.lookDir);
-		TransformMatrix cameraMatrix = TransformMatrix();
-
-		cameraMatrix.PointAt(scene.Cam.position, Vector3d::Add(scene.Cam.position,scene.Cam.lookDir), scene.Cam.upDirection);
-		
-		cameraMatrix.QuickInverse(cameraMatrix);
-
-		for (Face face : mesh.Faces) {
-			
-
-			Vector3d triProjected[] = { Vector3d(),Vector3d(),Vector3d() };
-			Vector3d triTransformed[] = { Vector3d(),Vector3d(),Vector3d() };
-			Vector3d triViewed[] = { Vector3d(),Vector3d(),Vector3d() };
-
-			triTransformed[0] = worldMatrix.Multiply(*face.A);
-			triTransformed[1] = worldMatrix.Multiply(*face.B);
-			triTransformed[2] = worldMatrix.Multiply(*face.C);
-
-			Vector3d normal = *Vector3d::Sub(triTransformed[1],triTransformed[0]).CrossProduct(Vector3d::Sub(triTransformed[2], triTransformed[0]))->Normalize();
-			Vector3d cameraRay = Vector3d::Sub(triTransformed[0], scene.Cam.position);
-			
-			
-			if (normal.DotProduct(cameraRay) < 0.0 || true) {
-				// TO DO: Shading here
-
-				triViewed[0] = cameraMatrix.Multiply(triTransformed[0]);
-				triViewed[1] = cameraMatrix.Multiply(triTransformed[1]);
-				triViewed[2] = cameraMatrix.Multiply(triTransformed[2]);
-
-
-				clipped.clear();
-				ClipAgainsPlane(Vector3d(0, 0, scene.Cam.Near), Vector3d(0, 0, 1), IndependendFace(triViewed[0], triViewed[1], triViewed[2]), clipped);
-
-				for (IndependendFace clippedFace : clipped) {
-
-					triProjected[0] = projectionMatrix.Multiply(clippedFace.A);
-					triProjected[1] = projectionMatrix.Multiply(clippedFace.B);
-					triProjected[2] = projectionMatrix.Multiply(clippedFace.C);
-
-					triProjected[0].Divide(triProjected[0].w);
-					triProjected[1].Divide(triProjected[1].w);
-					triProjected[2].Divide(triProjected[2].w);
-
-					triProjected[0].y *= -1.0;
-					triProjected[1].y *= -1.0;
-					triProjected[2].y *= -1.0;
-
-					triProjected[0].Transform(1, 1, 0);
-					triProjected[1].Transform(1, 1, 0);
-					triProjected[2].Transform(1, 1, 0);
-
-					//###################
-
-					triProjected[0].x *= width;
-					triProjected[0].y *= height;
-
-					triProjected[1].x *= width;
-					triProjected[1].y *= height;
-
-					triProjected[2].x *= width;
-					triProjected[2].y *= height;
-
-					//###################
-
-					if ( ((triProjected[0].z + triProjected[1].z + triProjected[2].z) / 3.0f ) > scene.Cam.Near) {
-						//Debug
-						drawBuffor.push_back(IndependendFace(triProjected[0], triProjected[1], triProjected[2]));
-					}
-
-				} // Foreach clipped
-
-			} // if dot product
-
-		} //Foreach Face
-
-	} // Foreach Meshes
-
-	std::sort(std::begin(drawBuffor), std::end(drawBuffor), [](IndependendFace faceA, IndependendFace faceB) {
-		
-		float z1 = faceA.AverageZ();
-		float z2 = faceB.AverageZ();
-
-		if (z1 < z2) return 1;
-		if (z1 == z2) return 0; else return -1;
-		} );
-
-	for (IndependendFace toDraw : drawBuffor) {
-		drawTriangleFast(toDraw, img);
-	}
-	
 }
 
 Renderer::Renderer()

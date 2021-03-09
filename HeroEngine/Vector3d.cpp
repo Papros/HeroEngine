@@ -142,9 +142,9 @@ Vector3d Vector3d::IntersectPlane(const Vector3d& planeP, const Vector3d& planeN
 	return Vector3d::Add(lineStart, Vector3d::Multiple(lineStartToEnd, t) );
 }
 
-std::string Vector3d::ToString(float offset) const
+std::string Vector3d::ToString(std::string title) const
 {
-	return ""+std::to_string(x+offset)+":"+ std::to_string(y + offset) +":"+ std::to_string(z + offset);
+	return (title!=""? title+" = " : "" ) + "[ "+std::to_string(x)+" , "+ std::to_string(y) +" , "+ std::to_string(z)+" ]";
 }
 
 Vector3d::Vector3d()

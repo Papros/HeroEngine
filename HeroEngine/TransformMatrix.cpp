@@ -58,7 +58,7 @@ Vector3d TransformMatrix::Multiply(const Vector3d& vector)
     y = vector.x * matrix[0][1] + vector.y * matrix[1][1] + vector.z * matrix[2][1] + vector.w * matrix[3][1];
     z = vector.x * matrix[0][2] + vector.y * matrix[1][2] + vector.z * matrix[2][2] + vector.w * matrix[3][2];
     w = vector.x * matrix[0][3] + vector.y * matrix[1][3] + vector.z * matrix[2][3] + vector.w * matrix[3][3];
-
+    
     if (w != 0.0f) {
         x /= w;
         y /= w;

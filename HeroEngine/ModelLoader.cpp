@@ -81,12 +81,9 @@ bool LoadDAEFile(std::string path, Mesh& mesh) {
 		{
 			input >> tag;
 			if (tag == pattern2) {
-				std::cout << line << std::endl;
 				line = line.substr(2, line.length() - 2);
-				std::cout << line << std::endl;
 				int n = line.find(">");
 				line = line.substr(n+1, line.length() - n - 14);
-				std::cout << line << std::endl;
 
 				std::istringstream vertexStr(line);
 				
@@ -111,7 +108,6 @@ bool LoadDAEFile(std::string path, Mesh& mesh) {
 				line = line.substr(n+1, line.length() - n - 4);
 				std::istringstream vertexStr(line);
 
-				std::cout << ":> " << line << std::endl;
 				while (vertexStr >> a >> unused >> unused >> b >> unused >> unused >> c >> unused >> unused) {
 					mesh.AddFace(a,b,c);
 				}
@@ -122,12 +118,10 @@ bool LoadDAEFile(std::string path, Mesh& mesh) {
 		}
 
 		if (pat1 && pat2 && pat3) {
-			std::cout << "Model loaded properly: " << path << std::endl;
 			return true;
 		}
 
 	}
-	std::cout << "Error when parsing: " << path << std::endl;
 	return false;
 }
 

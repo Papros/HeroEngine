@@ -31,7 +31,7 @@ public:
 	void Transform(float x, float y, float z);
 	void SetTo(float x, float y, float z, float w = 1.0f);
 
-	std::string ToString(float offset = 0.0) const;
+	std::string ToString(std::string title = "") const;
 
 	Vector3d();
 	Vector3d(const Vector3d& other);

@@ -48,9 +48,10 @@ void Engine::Start()
     Mesh myMyesh = Mesh();
     ModelLoader ml = ModelLoader();
    // ml.LoadModel("../Models/cube.obj", myMyesh, ModelLoader::FileType::OBJ);
-    //ml.LoadModel("../Models/ring.obj", myMyesh, ModelLoader::FileType::OBJ);
+    ml.LoadModel("../Models/ring.dae", myMyesh, ModelLoader::FileType::DAE);
     //ml.LoadModel("../Models/suzan.obj", myMyesh, ModelLoader::FileType::OBJ);
-    LoadCube(myMyesh);
+   // ml.LoadModel("../Models/teapot.obj", myMyesh, ModelLoader::FileType::OBJ);
+    //LoadCube(myMyesh);
     scene.Objects.push_back(myMyesh);
     
     Renderer render = Renderer();
@@ -78,7 +79,6 @@ void Engine::Start()
                 }
 
                 if (event.key.code == sf::Keyboard::Right) {
-                    std::cout << "R";
                     scene.Objects[0].Position.x += 0.5f;
                 }
 
@@ -114,6 +114,21 @@ void Engine::Start()
                     scene.Objects[0].Rotation.z += 0.05f;
                 }
 
+                if (event.key.code == sf::Keyboard::T) {
+                    scene.Objects[0].Rotation.x -= 0.05f;
+                }
+
+                if (event.key.code == sf::Keyboard::G) {
+                    scene.Objects[0].Rotation.y -= 0.05f;
+                }
+
+                if (event.key.code == sf::Keyboard::B) {
+                    scene.Objects[0].Rotation.z -= 0.05f;
+                }
+
+                if (event.key.code == sf::Keyboard::F) {
+                    render.Render(scene, okno, true);
+                }
 
                 if (event.key.code == sf::Keyboard::W) {
                     scene.Cam.position.Add(scene.Cam.lookDir);
@@ -146,9 +161,7 @@ void Engine::Start()
                 if (event.key.code == sf::Keyboard::Q) {
                     scene.Cam.Yaw -= 0.05f;
                 }
-
-                std::cout <<"Position:"<< scene.Cam.position.x << ":" << scene.Cam.position.y << ":" << scene.Cam.position.z << std::endl;
-
+                
                 okno.clear();
 
                 render.Render(scene, okno);

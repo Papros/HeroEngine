@@ -15,7 +15,7 @@ class Renderer
 		int frameRate;
 		bool showFaces, showEdges;
 
-		void Render(const Scene &scene, sf::RenderTarget &img);
+		void Render(const Scene &scene, sf::RenderTarget &img, bool debug = false);
 
 		Renderer();
 		Renderer(const Renderer& other);
