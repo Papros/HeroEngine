@@ -131,7 +131,7 @@ void Vector3d::SetTo(float x, float y, float z, float w)
 	this->w = w;
 }
 
-Vector3d Vector3d::IntersectPlane(const Vector3d& planeP, const Vector3d& planeN, const Vector3d& const lineStart, const Vector3d& lineEnd)
+Vector3d Vector3d::IntersectPlane(const Vector3d& planeP, const Vector3d& planeN, const Vector3d& lineStart, const Vector3d& lineEnd)
 {
 	Vector3d plane_n = Vector3d::Normalize(planeN);
 	float plane_d = -plane_n.DotProduct(planeP);

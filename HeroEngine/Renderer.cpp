@@ -2,11 +2,6 @@
 #include <iostream>
 #include <list>
 
-float distance(Vector3d vectorN, const Vector3d& vectorF, const Vector3d& vectorP) {
-
-	return vectorN.x * vectorP.x + vectorN.y * vectorP.y + vectorN.z * vectorP.z - vectorN.DotProduct(vectorF);
-}
-
 void drawTriangleFast(const IndependendFace& face, sf::RenderTarget &image) {
 	sf::ConvexShape triangle = sf::ConvexShape(3);
 	float posX = (float)image.getSize().x / 2.0f;
@@ -22,25 +17,8 @@ void drawTriangleFast(const IndependendFace& face, sf::RenderTarget &image) {
 
 }
 
-void drawFast(const IndependendFace& face, sf::RenderTarget& image) {
-	sf::ConvexShape triangle = sf::ConvexShape(3);
-	float posX = (float)image.getSize().x / 2.0f;
-	float posY = (float)image.getSize().y / 2.0f;
-	triangle.setPosition(posX, posY);
-	triangle.setPoint(0, sf::Vector2f(face.A.x, face.A.y));
-	triangle.setPoint(1, sf::Vector2f(face.B.x, face.B.y));
-	triangle.setPoint(2, sf::Vector2f(face.C.x, face.C.y));
-	triangle.setFillColor(sf::Color::Transparent);
-	triangle.setOutlineThickness(1);
-	triangle.setOutlineColor(sf::Color::White);
-	image.draw(triangle);
-
-}
-
 void ClipAgainsPlane(const Vector3d& plane_p, Vector3d plane_n, const IndependendFace& face, std::vector<IndependendFace>& resoult) {
 	
-
-
 	Vector3d normalN = Vector3d::Normalize(plane_n);
 
 	Vector3d insidePoints[3];  int ninsideP = 0;
@@ -59,39 +37,30 @@ void ClipAgainsPlane(const Vector3d& plane_p, Vector3d plane_n, const Independen
 	if (dist(face.C) >= 0.0f) { insidePoints[ninsideP++] = face.C; }
 	else { outsidePoints[noutsideP++] = face.C; }
 
-	if (ninsideP == 0) {
-		return;
-	}
-	
-	if (ninsideP == 3) {
-		resoult.push_back(face);
-		return;
-	}
-	
-	if (ninsideP == 1 && noutsideP == 2) {
-
+	switch (ninsideP) {
+	case 0: break;
+	case 1: 
 		resoult.push_back(IndependendFace(insidePoints[0],
 			Vector3d::IntersectPlane(plane_p, normalN, insidePoints[0], outsidePoints[0]),
 			Vector3d::IntersectPlane(plane_p, normalN, insidePoints[0], outsidePoints[1])));
 
-		return;
-	}
-
-	if (ninsideP == 2 && noutsideP == 1) {
-
-		IndependendFace tri1 = IndependendFace(insidePoints[0],
+		break;
+	case 2:
+		resoult.push_back(IndependendFace(insidePoints[0],
 			insidePoints[1],
-			Vector3d::IntersectPlane(plane_p, normalN, insidePoints[0], outsidePoints[0]));
-
-		resoult.push_back(tri1);
+			Vector3d::IntersectPlane(plane_p, normalN, insidePoints[0], outsidePoints[0])));
 
 		resoult.push_back(
 			IndependendFace(insidePoints[1],
-			tri1.C,
-			Vector3d::IntersectPlane(plane_p, normalN, insidePoints[1], outsidePoints[0])));
-
-		return;
+				Vector3d::IntersectPlane(plane_p, normalN, insidePoints[0], outsidePoints[0]),
+				Vector3d::IntersectPlane(plane_p, normalN, insidePoints[1], outsidePoints[0])));
+		break;
+	case 3:
+		resoult.push_back(face);
+		break;
+	default:break;
 	}
+
 }
 
 void Renderer::Render(const Scene &scene, sf::RenderTarget& img, bool debug)
@@ -101,10 +70,6 @@ void Renderer::Render(const Scene &scene, sf::RenderTarget& img, bool debug)
 		std::cout << "=========== DEBUG ===========" << std::endl;
 	}
 
-	img.clear(sf::Color::Black);
-
-	TransformMatrix projectionMatrix = TransformMatrix();
-	projectionMatrix.MakeProjection(scene.Cam.angle, ((float)img.getSize().y / (float)img.getSize().x), scene.Cam.Near, scene.Cam.Far);
 	float scale = 0.5f;
 	float width = (float)img.getSize().x * scale;
 	float height = (float)img.getSize().y * scale;
@@ -131,15 +96,6 @@ void Renderer::Render(const Scene &scene, sf::RenderTarget& img, bool debug)
 		worldMatrix.Multiply(matRotX);
 		worldMatrix.Multiply(matRotY);
 		worldMatrix.Multiply(transformMatrix);
-
-		TransformMatrix cameraRotationMatrix = TransformMatrix();
-		cameraRotationMatrix.MakeRotationY(scene.Cam.Yaw);
-		Vector3d lookDirection = cameraRotationMatrix.Multiply(scene.Cam.lookDir);
-		TransformMatrix cameraMatrix = TransformMatrix();
-
-		cameraMatrix.PointAt(scene.Cam.position, Vector3d::Add(scene.Cam.position, lookDirection), scene.Cam.upDirection);
-
-		cameraMatrix.QuickInverse(cameraMatrix);
 
 		for (Face face : mesh.Faces) {
 
@@ -261,11 +217,27 @@ void Renderer::Render(const Scene &scene, sf::RenderTarget& img, bool debug)
 	} //Foreach toDraw
 }
 
+void Renderer::UpdateCamera(const Camera& camera)
+{
+	TransformMatrix cameraRotationMatrix = TransformMatrix();
+	cameraRotationMatrix.MakeRotationY(camera.Yaw);
+	Vector3d lookDirection = cameraRotationMatrix.Multiply(camera.lookDir);
+	cameraMatrix.PointAt(camera.position, Vector3d::Add(camera.position, lookDirection), camera.upDirection);
+	cameraMatrix.QuickInverse(cameraMatrix);
+}
+
+void Renderer::SetCamera(const Camera& camera, float imgY, float imgX)
+{
+	projectionMatrix.MakeProjection(camera.angle, (imgY / imgX), camera.Near, camera.Far);
+}
+
 Renderer::Renderer()
 {
 	this->frameRate = 30;
 	this->showEdges = true;
 	this->showFaces = true;
+	this->cameraMatrix = TransformMatrix();
+	this->projectionMatrix = TransformMatrix();
 }
 
 Renderer::Renderer(const Renderer& other)
@@ -273,6 +245,8 @@ Renderer::Renderer(const Renderer& other)
 	this->frameRate = other.frameRate;
 	this->showEdges = other.showEdges;
 	this->showFaces = other.showFaces;
+	this->cameraMatrix = other.cameraMatrix;
+	this->projectionMatrix = other.projectionMatrix;
 }
 
 Renderer::~Renderer()

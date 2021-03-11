@@ -44,29 +44,47 @@ void LoadCube(Mesh& cube) {
 
 void Engine::Start()
 {
+    int frameRate = 0;
+    sf::Font font = sf::Font();
+    font.loadFromFile("../Res/fonts/sansation.ttf");
+    sf::Text frameRateLabel = sf::Text();
+    frameRateLabel.setString(sf::String("FPS:"));
+    frameRateLabel.setFont(font);
+    frameRateLabel.setCharacterSize(10);
+    frameRateLabel.setFillColor(sf::Color::White);
+    frameRateLabel.setOutlineColor(sf::Color::White);
+    frameRateLabel.setPosition(sf::Vector2f(20, 5));
+    
     Scene scene = Scene();
     Mesh myMyesh = Mesh();
     ModelLoader ml = ModelLoader();
-   // ml.LoadModel("../Models/cube.obj", myMyesh, ModelLoader::FileType::OBJ);
-    ml.LoadModel("../Models/ring.dae", myMyesh, ModelLoader::FileType::DAE);
-    //ml.LoadModel("../Models/suzan.obj", myMyesh, ModelLoader::FileType::OBJ);
-   // ml.LoadModel("../Models/teapot.obj", myMyesh, ModelLoader::FileType::OBJ);
-    //LoadCube(myMyesh);
+   //ml.LoadModel("../Models/cube.obj", myMyesh, ModelLoader::FileType::OBJ);
+    //ml.LoadModel("../Models/ring.dae", myMyesh, ModelLoader::FileType::DAE);
+   //ml.LoadModel("../Models/suzan.obj", myMyesh, ModelLoader::FileType::OBJ);
+    
+    //ml.LoadModel("../Models/teapot.obj", myMyesh, ModelLoader::FileType::OBJ);
+    LoadCube(myMyesh);
     scene.Objects.push_back(myMyesh);
     
     Renderer render = Renderer();
    
 	sf::RenderWindow okno(sf::VideoMode(900,900), "HeroEngine");
 
-    okno.clear();
+    okno.clear(sf::Color::Black);
 
+    render.SetCamera(scene.Cam, okno.getSize().y, okno.getSize().x);
+    render.UpdateCamera(scene.Cam);
     render.Render(scene, okno);
 
     okno.display();
-    
-	while (okno.isOpen()) {
 
+    sf::Clock clock = sf::Clock();
+    clock.restart();
+
+	while (okno.isOpen()) {
+        
         sf::Event event;
+
         while (okno.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
@@ -162,19 +180,30 @@ void Engine::Start()
                     scene.Cam.Yaw -= 0.05f;
                 }
                 
-                okno.clear();
+                render.UpdateCamera(scene.Cam);
+            } //if keypressed
 
-                render.Render(scene, okno);
+        } //while Event
 
-                okno.display();
-            }
 
-        } //while
+        okno.clear();
+
+        render.Render(scene, okno);
+
+        frameRate++;
+        
+        if (clock.getElapsedTime() >= sf::milliseconds(1000) ) {
+            frameRateLabel.setString(sf::String("FPS:"+ std::to_string(frameRate) ));
+            frameRate = 0;
+            clock.restart();
+        }
+
+        okno.draw(frameRateLabel);
+
+        okno.display();
 
         
-
-        
-	}
+	} // while isOpen
 
     
 }

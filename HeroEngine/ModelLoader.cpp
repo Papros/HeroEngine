@@ -44,6 +44,7 @@ bool LoadOBJFile(std::string path, Mesh& mesh) {
 
 	}
 
+	model.close();
 	return true;
 }
 
@@ -118,10 +119,12 @@ bool LoadDAEFile(std::string path, Mesh& mesh) {
 		}
 
 		if (pat1 && pat2 && pat3) {
+			model.close();
 			return true;
 		}
 
 	}
+	model.close();
 	return false;
 }
 
